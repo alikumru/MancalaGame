@@ -1,26 +1,28 @@
 package com.bol.mancalagame.service;
 
-import com.bol.mancalagame.model.GameData;
+import com.bol.mancalagame.model.Game;
 import com.bol.mancalagame.model.Player;
+import lombok.Getter;
+import lombok.Setter;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Flow;
 
-public abstract class GameService implements Flow.Subscriber<GameData> {
+@Getter
+@Setter
+public abstract class GameService implements Flow.Subscriber<Game> {
 
     Flow.Subscription subscription;
-    GameData gameData;
+    private Game game;
 
-    @PostConstruct
-    abstract void createStones();
+    abstract Map<Integer, Integer> move(int pit, int playerId,Game game);
 
-    abstract Map<Integer, Integer> move(int pit, int playerId);
-
-    abstract public boolean status();
+    abstract public boolean status(Game game);
 
     abstract List<Player> getPlayers();
+
+    abstract int checkTurn(int player,int lastPosition,Map<Integer,Integer> stonesMap);
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {

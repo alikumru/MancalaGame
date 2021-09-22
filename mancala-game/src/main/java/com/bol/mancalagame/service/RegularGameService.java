@@ -1,98 +1,110 @@
 package com.bol.mancalagame.service;
 
-import com.bol.mancalagame.model.GameData;
+import com.bol.mancalagame.model.Game;
 import com.bol.mancalagame.model.Player;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class RegularGameService extends GameService {
 
-    //It stores key:id_of_pit and value:Number of stones in pit
-    static Map<Integer, Integer> stonesMap = new HashMap<>();
-    static Map<Integer, Integer> appositeMap = new HashMap<>();
-
-    @PostConstruct
-    public void createStones() {
-        //keys: between 1-6 belongs to player 1,keys: between 8-13 belongs to player 2
-        //key: number 7 is player 1's store
-        //key: number 14 is player 2's store
-        stonesMap.put(1, 4);
-        stonesMap.put(2, 4);
-        stonesMap.put(3, 4);
-        stonesMap.put(4, 4);
-        stonesMap.put(5, 4);
-        stonesMap.put(6, 4);
-        stonesMap.put(7, 0);
-        stonesMap.put(8, 4);
-        stonesMap.put(9, 4);
-        stonesMap.put(10, 4);
-        stonesMap.put(11, 4);
-        stonesMap.put(12, 4);
-        stonesMap.put(13, 4);
-        stonesMap.put(14, 4);
-
-        appositeMap.put(1, 13);
-        appositeMap.put(2, 12);
-        appositeMap.put(3, 11);
-        appositeMap.put(4, 10);
-        appositeMap.put(5, 9);
-        appositeMap.put(6, 8);
-        appositeMap.put(13, 1);
-        appositeMap.put(12, 2);
-        appositeMap.put(11, 3);
-        appositeMap.put(10, 4);
-        appositeMap.put(9, 5);
-        appositeMap.put(8, 6);
-    }
-
     @Override
-    public Map<Integer, Integer> move(int pit, int playerId) {
-        int turn = gameData.getTurn();
-        if (playerId != turn) return null;
-
-        int stones = stonesMap.get(pit);
-
-        //Pit is already played, there is no stone on the pit
-        if (stones == 0) return null;
-
+    public Map<Integer, Integer> move(int pit, int playerId, Game game) {
+        System.out.print(playerId+"-"+pit+"-->\t");
+        Map<Integer, Integer> gameBoard = game.getGameBoard();
+        int stones = gameBoard.get(pit);
+        int turn = game.getTurn();
         //Taking stones from the pit, pit will be empty
-        stonesMap.put(pit, 0);
+        gameBoard.put(pit, 0);
 
         while (stones > 0) {
             pit++;
             if (pit > 14) pit = 1;
-            stonesMap.merge(pit, 1, Integer::sum);
+            int stonesFromApposite = 0;
+            if (playerId == 1 && pit == 14) {
+                continue;
+            }
+            if (playerId == 2 && pit == 7) {
+                continue;
+            }
+
+            //if last stone land player's and empty pit player gets stones from right apposite
+            if (stones == 1 && gameBoard.get(pit) == 0) {
+                stonesFromApposite = checkAppositePit(playerId,pit, gameBoard);
+            }
+            gameBoard.merge(pit, stonesFromApposite + 1, Integer::sum);
             stones--;
         }
 
-        //If last stone goes to player's own store, turn does not change
-        turn = (pit == 7 && turn == 1) ? 1 : 2;
-        turn = (pit == 14 && turn == 2) ? 2 : 1;
+        for(Map.Entry entry: gameBoard.entrySet()){
+            System.out.print(entry.getValue()+"\t");
+        }
+        System.out.println();
+        if (status(game)) {
+            return game.getScore();
+        }
+        //If the player's last stone lands in his own big pit, he gets another turn.
+        turn = checkTurn(playerId, pit, gameBoard);
+        game.setTurn(turn);
 
         //If player's last stone goes to empty pit(but player's own pit) and other player has any stone d
-        if (pit == 14 && turn == turn) {
-            turn = 1;
-        }
-        return stonesMap;
+        return gameBoard;
+    }
+
+    /*  Always when the last stone
+           lands in an own empty pit, the player captures his own stone and all stones in the
+           opposite pit (the other player’s pit) and puts them in his own (big or little?) pit.
+    */
+    private int checkAppositePit(int player,int pit, Map<Integer, Integer> gameBoard) {
+        if (pit == 7 || pit == 14)
+            return 0;
+        if(player==1 && pit >7)
+            return 0;
+        if(player==2 && pit <7)
+            return 0;
+        return gameBoard.get(14 - pit);
     }
 
     @Override
-    public boolean status() {
-        return gameData.isOver();
+    public boolean status(Game game) {
+        Map<Integer, Integer> gameBoard = game.getGameBoard();
+
+        Map<Integer, Integer> firstPlayerBoard = gameBoard.entrySet().stream()
+                .filter(map -> (map.getKey() < 7 && 0 == map.getValue()))
+                .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+        List<Integer> secondPlayerBoard = gameBoard.entrySet().stream()
+                .filter(map -> (map.getKey() > 7 && map.getKey() < 14 && 0 == map.getValue()))
+                .map(map -> map.getValue())
+                .collect(Collectors.toList());
+
+        if (firstPlayerBoard.size() == 6 || secondPlayerBoard.size() == 6) {
+            game.setOver(true);
+        }
+        return getGame().isOver();
     }
 
     @Override
     public List<Player> getPlayers() {
-        return gameData.getPlayers();
+        return this.getGame().getPlayers();
     }
 
     @Override
-    public void onNext(GameData item) {
+    int checkTurn(int player, int lastPosition, Map<Integer, Integer> gameBoard) {
+
+        if (lastPosition == 7 && player == 1) {
+            return 1;
+        } else if (lastPosition == 14 && player == 2) {
+            return 2;
+        }
+        return (player == 1) ? 2 : 1;
+    }
+
+    @Override
+    public void onNext(Game item) {
         System.out.println("Subscription request sended!");
         subscription.request(1);
     }

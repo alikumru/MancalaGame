@@ -1,38 +1,39 @@
 package com.bol.mancalagame.service;
 
-import com.bol.mancalagame.model.GameData;
+import com.bol.mancalagame.model.Game;
 import com.bol.mancalagame.model.Player;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class MultiPlayerGameService extends GameService {
 
-    @PostConstruct
-    public void createStones() {
-
-    }
-
     @Override
-    public Map<Integer, Integer> move(int pit, int playerId) {
+    public Map<Integer, Integer> move(int pit, int playerId,Game game) {
         return null;
     }
 
     @Override
-    public boolean status() {
-        return gameData.isOver();
+    public boolean status(Game game) {
+
+
+        return getGame().isOver();
     }
 
     @Override
     public List<Player> getPlayers() {
-        return gameData.getPlayers();
+        return getGame().getPlayers();
     }
 
     @Override
-    public void onNext(GameData item) {
+    int checkTurn(int player, int lastPosition, Map<Integer, Integer> stonesMap) {
+        return 0;
+    }
+
+    @Override
+    public void onNext(Game item) {
         System.out.println("Subscription request sended!");
         subscription.request(1);
     }
