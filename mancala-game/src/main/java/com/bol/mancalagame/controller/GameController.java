@@ -61,8 +61,12 @@ public class GameController {
         // Get game object from game service
         Game game = regularGameService.getGame();
 
-        if (game.isOver())
+        if (game.isOver()){
+            System.out.println("Game is already over!!");
+            System.out.println(game.getScore());
             return new ResponseEntity<>(ErrorHttpResponse.ERROR103.toString(), HttpStatus.BAD_REQUEST);
+        }
+
         // Pit should be between 1-14
         if (pitId < 1 || pitId > 14)
             return new ResponseEntity<String>(ErrorHttpResponse.ERROR105.toString(), HttpStatus.BAD_REQUEST);

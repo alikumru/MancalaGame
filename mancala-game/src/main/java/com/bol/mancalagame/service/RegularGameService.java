@@ -14,7 +14,7 @@ public class RegularGameService extends GameService {
 
     @Override
     public Map<Integer, Integer> move(int pit, int playerId, Game game) {
-        System.out.print(playerId+"-"+pit+"-->\t");
+        System.out.print(playerId + "-" + pit + "-->\t");
         Map<Integer, Integer> gameBoard = game.getGameBoard();
         int stones = gameBoard.get(pit);
         int turn = game.getTurn();
@@ -34,14 +34,24 @@ public class RegularGameService extends GameService {
 
             //if last stone land player's and empty pit player gets stones from right apposite
             if (stones == 1 && gameBoard.get(pit) == 0) {
-                stonesFromApposite = checkAppositePit(playerId,pit, gameBoard);
+                stonesFromApposite = checkAppositePit(playerId, pit, gameBoard);
             }
-            gameBoard.merge(pit, stonesFromApposite + 1, Integer::sum);
+            //if stones comes from apposite put
+            if (stonesFromApposite > 0) {
+                if (playerId == 1) {
+                    gameBoard.merge(7, stonesFromApposite+1, Integer::sum);
+                } else {
+                    gameBoard.merge(14, stonesFromApposite+1, Integer::sum);
+                }
+            } else {
+                gameBoard.merge(pit, 1, Integer::sum);
+            }
+
             stones--;
         }
 
-        for(Map.Entry entry: gameBoard.entrySet()){
-            System.out.print(entry.getValue()+"\t");
+        for (Map.Entry entry : gameBoard.entrySet()) {
+            System.out.print(entry.getValue() + "\t");
         }
         System.out.println();
         if (status(game)) {
@@ -59,14 +69,17 @@ public class RegularGameService extends GameService {
            lands in an own empty pit, the player captures his own stone and all stones in the
            opposite pit (the other player’s pit) and puts them in his own (big or little?) pit.
     */
-    private int checkAppositePit(int player,int pit, Map<Integer, Integer> gameBoard) {
+    private int checkAppositePit(int player, int pit, Map<Integer, Integer> gameBoard) {
         if (pit == 7 || pit == 14)
             return 0;
-        if(player==1 && pit >7)
+        if (player == 1 && pit > 7)
             return 0;
-        if(player==2 && pit <7)
+        if (player == 2 && pit < 7)
             return 0;
-        return gameBoard.get(14 - pit);
+
+        int apposite = gameBoard.get(14 - pit);
+        gameBoard.put(14-pit,0);
+        return apposite;
     }
 
     @Override
