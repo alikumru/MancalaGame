@@ -35,7 +35,7 @@ public class GameController {
     }
 
     @GetMapping(path = "/regular-game-start", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String startRegularGame(String firstPlayerName, String secondPlayerName) throws Exception {
+    public int startRegularGame(@RequestParam("first-player-name") String firstPlayerName,@RequestParam("second-player-name") String secondPlayerName) throws Exception {
         RegularGameService regularGame = (RegularGameService) GameFactory.getGameService(2, "regular");
         int gameId = new Random().nextInt(100);
 
@@ -50,11 +50,11 @@ public class GameController {
         gamePublisher.subscribe(regularGame);
         // Put this new game object into the game map to be able to get currect game and validate
         gamesMap.put(gameId, regularGame);
-        return String.valueOf(gameId);
+        return gameId;
     }
 
     @PutMapping(path = "/move-regular", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> moveRegularGame(@RequestParam("game-id") int gameId, @RequestParam("player") Integer playerId, @RequestParam("pit") Integer pitId) throws JsonProcessingException {
+    public ResponseEntity<Object> moveRegularGame(@RequestParam("game-id") int gameId, @RequestParam("player") Integer playerId, @RequestParam("pit") Integer pitId) throws JsonProcessingException {
         // Get the game service from gamesMap
         RegularGameService regularGameService = (RegularGameService) gamesMap.get(gameId);
 
@@ -69,23 +69,28 @@ public class GameController {
 
         // Pit should be between 1-14
         if (pitId < 1 || pitId > 14)
-            return new ResponseEntity<String>(ErrorHttpResponse.ERROR105.toString(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR105.toString(), HttpStatus.BAD_REQUEST);
         // Pit number 7 and 14 are stores, not allowed to play
         if (pitId == 7 || pitId == 14)
-            return new ResponseEntity<String>(ErrorHttpResponse.ERROR105.toString(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR105.toString(), HttpStatus.BAD_REQUEST);
 
         // Be sure if player's turn is correct
         if (game.getTurn() != playerId)
-            return new ResponseEntity<String>(ErrorHttpResponse.ERROR102.toString(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR102, HttpStatus.BAD_REQUEST);
 
+        if (playerId==1 && pitId>7)
+            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR104, HttpStatus.BAD_REQUEST);
+
+        if (playerId==2 && pitId<7)
+            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR104, HttpStatus.BAD_REQUEST);
 
         //If pit is empty return error
         if (game.getGameBoard().get(pitId) == 0)
-            return new ResponseEntity<String>(ErrorHttpResponse.ERROR104.toString(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR104.toString(), HttpStatus.BAD_REQUEST);
 
         regularGameService.move(pitId, playerId, game);
 //        String json = new ObjectMapper().writeValueAsString(regularGameService.move(playerId, pitId,game));
-        return null;
+        return new ResponseEntity<Object>(game, HttpStatus.OK);
     }
 
     @GetMapping(path = "/multiplayer-game-start", produces = MediaType.APPLICATION_JSON_VALUE)
