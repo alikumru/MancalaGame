@@ -1,5 +1,6 @@
 package com.bol.mancalagame.controller;
 
+import com.bol.mancalagame.exception.GameValidationException;
 import com.bol.mancalagame.factory.GameBoardFactory;
 import com.bol.mancalagame.factory.GameFactory;
 import com.bol.mancalagame.factory.PlayerFactory;
@@ -9,6 +10,7 @@ import com.bol.mancalagame.response.ErrorHttpResponse;
 import com.bol.mancalagame.service.GameService;
 import com.bol.mancalagame.service.MultiPlayerGameService;
 import com.bol.mancalagame.service.RegularGameService;
+import com.bol.mancalagame.validator.GameValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +30,16 @@ public class GameController {
     public static Map<Integer, GameService> gamesMap = new HashMap<>();
 
     GamePublisher gamePublisher;
+    GameValidator gameValidator;
 
     @Autowired
-    public GameController(GamePublisher gamePublisher) {
+    public GameController(GamePublisher gamePublisher, GameValidator gameValidator) {
         this.gamePublisher = gamePublisher;
+        this.gameValidator = gameValidator;
     }
 
     @GetMapping(path = "/regular-game-start", produces = MediaType.APPLICATION_JSON_VALUE)
-    public int startRegularGame(@RequestParam("first-player-name") String firstPlayerName,@RequestParam("second-player-name") String secondPlayerName) throws Exception {
+    public int startRegularGame(@RequestParam("first-player-name") String firstPlayerName, @RequestParam("second-player-name") String secondPlayerName) throws Exception {
         RegularGameService regularGame = (RegularGameService) GameFactory.getGameService(2, "regular");
         int gameId = new Random().nextInt(100);
 
@@ -58,38 +62,24 @@ public class GameController {
         // Get the game service from gamesMap
         RegularGameService regularGameService = (RegularGameService) gamesMap.get(gameId);
 
+        // Be sure reqular game object is not null
+        if (regularGameService == null) {
+            return new ResponseEntity<>(new ErrorHttpResponse("1000", "Please start new game!"), HttpStatus.BAD_REQUEST);
+        }
         // Get game object from game service
         Game game = regularGameService.getGame();
 
-        if (game.isOver()){
-            System.out.println("Game is already over!!");
-            System.out.println(game.getScore());
-            return new ResponseEntity<>(ErrorHttpResponse.ERROR103.toString(), HttpStatus.BAD_REQUEST);
+        try {
+            gameValidator.valitadateGame(regularGameService, playerId, pitId);
+            regularGameService.move(pitId, playerId, game);
+        } catch (GameValidationException gameValidationException) {
+            return new ResponseEntity<>(new ErrorHttpResponse(gameValidationException.getErrorCode(), gameValidationException.getMessage()),
+                    HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorHttpResponse(e.getMessage(), "Error during playing game"),
+                    HttpStatus.BAD_REQUEST);
         }
 
-        // Pit should be between 1-14
-        if (pitId < 1 || pitId > 14)
-            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR105.toString(), HttpStatus.BAD_REQUEST);
-        // Pit number 7 and 14 are stores, not allowed to play
-        if (pitId == 7 || pitId == 14)
-            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR105.toString(), HttpStatus.BAD_REQUEST);
-
-        // Be sure if player's turn is correct
-        if (game.getTurn() != playerId)
-            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR102, HttpStatus.BAD_REQUEST);
-
-        if (playerId==1 && pitId>7)
-            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR104, HttpStatus.BAD_REQUEST);
-
-        if (playerId==2 && pitId<7)
-            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR104, HttpStatus.BAD_REQUEST);
-
-        //If pit is empty return error
-        if (game.getGameBoard().get(pitId) == 0)
-            return new ResponseEntity<Object>(ErrorHttpResponse.ERROR104.toString(), HttpStatus.BAD_REQUEST);
-
-        regularGameService.move(pitId, playerId, game);
-//        String json = new ObjectMapper().writeValueAsString(regularGameService.move(playerId, pitId,game));
         return new ResponseEntity<Object>(game, HttpStatus.OK);
     }
 

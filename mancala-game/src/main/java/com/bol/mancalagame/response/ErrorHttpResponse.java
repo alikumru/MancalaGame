@@ -3,14 +3,13 @@ package com.bol.mancalagame.response;
 import lombok.Getter;
 
 @Getter
-public enum ErrorHttpResponse {
+public class ErrorHttpResponse {
 
-    ERROR101("Player Not Found"),
-    ERROR102("It's not your turn"),
-    ERROR103("Game is already over"),
-    ERROR104("You can not play with empty pit"),
-    ERROR105("Pit number is not correct");
+    private String errorCode;
+    private String errorMessage;
 
-    ErrorHttpResponse(String errorMessage) {
+    public ErrorHttpResponse(String errorCode, String errorMessage) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
     }
 }

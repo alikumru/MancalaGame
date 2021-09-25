@@ -21,7 +21,8 @@ var app = new Vue({
         playerId: 1,
         firstPlayerName: "",
         secondPlayerName: "",
-        turnMessage: "It is player one's turn"
+        turnMessage: "It is player one's turn",
+        message: ""
     },
     watch: {},
     methods: {
@@ -46,10 +47,12 @@ var app = new Vue({
                         app.pit12 = 6;
                         app.pit13 = 6;
                         app.pit14 = 0;
+                        app.playerId = 1;
                         console.log(response.data);
                     })
                     .catch(function (error) {
                         reject(error);
+                        app.message = error.response.data.errorMessage;
                     })
             });
         },
@@ -60,29 +63,37 @@ var app = new Vue({
                 axios.put(request_url_move, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
                     .then(function (response) {
                         resolve(response);
-                        console.log(response.data);
+                        const gameBoard = response.data.gameBoard;
+                        app.orderBoard(gameBoard);
+                        if (response.data.over) {
+                            app.message = "Game is over. The winner is " + response.data.winner;
+                        }
                         app.playerId = response.data.turn;
                         app.turnMessage = app.playerId == 1 ? "It is player one's turn" : "It is player two's turn";
-                        const gameBoard = response.data.gameBoard;
-                        app.pit1 = gameBoard[1];
-                        app.pit2 = gameBoard[2];
-                        app.pit3 = gameBoard[3];
-                        app.pit4 = gameBoard[4];
-                        app.pit5 = gameBoard[5];
-                        app.pit6 = gameBoard[6];
-                        app.pit7 = gameBoard[7];
-                        app.pit8 = gameBoard[8];
-                        app.pit9 = gameBoard[9];
-                        app.pit10 = gameBoard[10];
-                        app.pit11 = gameBoard[11];
-                        app.pit12 = gameBoard[12];
-                        app.pit13 = gameBoard[13];
-                        app.pit14 = gameBoard[14];
+
+
                     })
                     .catch(function (error) {
                         reject(error);
+                        app.message = error.response.data.errorMessage;
                     })
             });
+        },
+        orderBoard: (gameBoard) => {
+            app.pit1 = gameBoard[1];
+            app.pit2 = gameBoard[2];
+            app.pit3 = gameBoard[3];
+            app.pit4 = gameBoard[4];
+            app.pit5 = gameBoard[5];
+            app.pit6 = gameBoard[6];
+            app.pit7 = gameBoard[7];
+            app.pit8 = gameBoard[8];
+            app.pit9 = gameBoard[9];
+            app.pit10 = gameBoard[10];
+            app.pit11 = gameBoard[11];
+            app.pit12 = gameBoard[12];
+            app.pit13 = gameBoard[13];
+            app.pit14 = gameBoard[14];
         }
     }
 })

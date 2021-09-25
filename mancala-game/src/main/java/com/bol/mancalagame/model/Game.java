@@ -19,24 +19,16 @@ public class Game {
     private int turn;
     private Map<Integer, Integer> gameBoard;
     private int winner = -1;
-    private Map<Integer,Integer> score;
+    private Map<Integer, Integer> score = new HashMap<>();
 
     public Game(int id, List<Player> players) {
         this.id = id;
         this.players = players;
-    }
-
-    public void setOver(boolean over) {
-        isOver = over;
+        score.put(1, 0);
+        score.put(2, 0);
     }
 
     public Map<Integer, Integer> getScore() {
-        if(gameBoard.size()==0)
-            return null;
-
-        Map<Integer, Integer> scoreBoard = gameBoard.entrySet().stream()
-                .filter(map -> (map.getKey()==7 || map.getKey() == 14))
-                .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
-        return scoreBoard;
+        return score;
     }
 }

@@ -16,20 +16,18 @@ public class MultiPlayerGameService extends GameService {
     }
 
     @Override
-    public boolean status(Game game) {
-
-
-        return getGame().isOver();
-    }
-
-    @Override
-    public List<Player> getPlayers() {
-        return getGame().getPlayers();
-    }
-
-    @Override
-    int checkTurn(int player, int lastPosition, Map<Integer, Integer> stonesMap) {
+    int checkTurn(int player, int lastPosition) {
         return 0;
+    }
+
+    @Override
+    void calculateScore(Game game) {
+
+    }
+
+    @Override
+    void clearBoard(Game game) {
+
     }
 
     @Override

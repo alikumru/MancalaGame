@@ -16,13 +16,13 @@ public abstract class GameService implements Flow.Subscriber<Game> {
     Flow.Subscription subscription;
     private Game game;
 
-    abstract Map<Integer, Integer> move(int pit, int playerId,Game game);
+    abstract Map<Integer, Integer> move(int pit, int playerId, Game game);
 
-    abstract public boolean status(Game game);
+    abstract int checkTurn(int player, int lastPosition);
 
-    abstract List<Player> getPlayers();
+    abstract void calculateScore(Game game);
 
-    abstract int checkTurn(int player,int lastPosition,Map<Integer,Integer> stonesMap);
+    abstract void clearBoard(Game game);
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
