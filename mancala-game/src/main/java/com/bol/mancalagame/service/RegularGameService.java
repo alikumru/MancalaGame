@@ -40,7 +40,8 @@ public class RegularGameService extends GameService {
         calculateScore(game);
         //If the player's last stone lands in player's store, he gets another turn.
         game.setTurn(checkTurn(playerId, pit));
-
+        game.getScore().put(1,gameBoard.get(7));
+        game.getScore().put(2,gameBoard.get(14));
         return gameBoard;
     }
 
@@ -70,35 +71,6 @@ public class RegularGameService extends GameService {
             return;
         }
         gameBoard.merge(pit, 1, Integer::sum);
-    }
-
-    /*  Always when the last stone
-           lands in an own empty pit, the player captures his own stone and all stones in the
-           opposite pit (the other player’s pit) and puts them in his own (big or little?) pit.
-    */
-    private int checkAppositePit(int player, int pit, Map<Integer, Integer> gameBoard) {
-        if (pit == 7 || pit == 14)
-            return 0;
-        if (player == 1 && pit > 7)
-            return 0;
-        if (player == 2 && pit < 7)
-            return 0;
-
-        int apposite = gameBoard.get(14 - pit);
-        gameBoard.put(14 - pit, 0);
-        return apposite;
-    }
-
-    private boolean isStore(int pit) {
-        return (pit == 7 || pit == 14);
-    }
-
-    private int getStore(int player) {
-        return player == 1 ? 7 : 14;
-    }
-
-    private boolean isYourSide(int player, int pit) {
-        return (player == 1 && pit <= 7) || (player == 2 && pit > 7);
     }
 
     @Override
@@ -135,6 +107,8 @@ public class RegularGameService extends GameService {
             gameBoard.merge(7, player1Score, Integer::sum);
             gameBoard.merge(14, player2Score, Integer::sum);
             game.setWinner(gameBoard.get(1) > gameBoard.get(2) ? 1 : 2);
+            game.getScore().put(1,gameBoard.get(7));
+            game.getScore().put(2,gameBoard.get(14));
             clearBoard(game);
         }
     }
@@ -154,5 +128,17 @@ public class RegularGameService extends GameService {
     @Override
     public void onNext(Game item) {
         subscription.request(1);
+    }
+
+    private boolean isStore(int pit) {
+        return (pit == 7 || pit == 14);
+    }
+
+    private int getStore(int player) {
+        return player == 1 ? 7 : 14;
+    }
+
+    private boolean isYourSide(int player, int pit) {
+        return (player == 1 && pit <= 7) || (player == 2 && pit > 7);
     }
 }

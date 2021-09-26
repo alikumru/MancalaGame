@@ -32,7 +32,6 @@ public class MultiPlayerGameService extends GameService {
 
     @Override
     public void onNext(Game item) {
-        System.out.println("Subscription request sended!");
         subscription.request(1);
     }
 }

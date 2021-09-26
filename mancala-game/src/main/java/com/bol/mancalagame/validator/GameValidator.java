@@ -28,7 +28,7 @@ public class GameValidator {
 
         // Pit should be between 1-14
         if (pitId < 1 || pitId > 14)
-            throw new GameValidationException("Unsupported number!", "1002");
+            throw new GameValidationException("Unsupported number, pit number should be between 1-14 except 7 and 14!", "1002");
 
         // Pit number 7 and 14 are stores, not allowed to play
         if (pitId == 7 || pitId == 14)

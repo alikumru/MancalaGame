@@ -32,11 +32,9 @@ public abstract class GameService implements Flow.Subscriber<Game> {
 
     @Override
     public void onError(Throwable throwable) {
-        System.out.println("Error accured");
     }
 
     @Override
     public void onComplete() {
-        System.out.println("Subscription successfull!");
     }
 }

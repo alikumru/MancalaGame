@@ -84,19 +84,18 @@ public class GameController {
     }
 
     @GetMapping(path = "/multiplayer-game-start", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String startMultiplayerGame() {
+    public ResponseEntity<Object> startMultiplayerGame() {
 
-        MultiPlayerGameService multiPlayerGameService = (MultiPlayerGameService) GameFactory.getGameService(2, "regular");
+        MultiPlayerGameService multiPlayerGameService = (MultiPlayerGameService) GameFactory.getGameService(4, "multiplayer");
         gamePublisher.subscribe(multiPlayerGameService);
-        return "Started Mancala Game";
+        return new ResponseEntity<Object>(multiPlayerGameService, HttpStatus.OK);
     }
 
     @PutMapping(path = "/move-multiplayer", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String moveMultiplayerGame(@RequestParam("player") Integer playerId, @RequestParam("pit") Integer pitId) throws JsonProcessingException {
+    public ResponseEntity<Object> moveMultiplayerGame(@RequestParam("player") Integer playerId, @RequestParam("pit") Integer pitId) throws JsonProcessingException {
 
         MultiPlayerGameService multiPlayerGameService = (MultiPlayerGameService) gamesMap.get(0);
-        String json = new ObjectMapper().writeValueAsString(multiPlayerGameService.move(playerId, pitId, null));
-        return json;
+        return new ResponseEntity<Object>(multiPlayerGameService, HttpStatus.OK);
     }
 
 }
