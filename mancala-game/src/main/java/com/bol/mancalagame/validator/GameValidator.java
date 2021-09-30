@@ -18,6 +18,7 @@ public class GameValidator {
         }
 
         Game game = gameService.getGame();
+        // Be sure game is still active
         if (game.isOver()) {
             throw new GameValidationException("Game is already over!", "1001");
         }
